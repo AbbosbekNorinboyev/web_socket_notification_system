@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Notifications</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+</head>
+<body>
+<h1>Real-Time Notifications</h1>
+<div id="notifications"></div>
+<input type="text" id="message" placeholder="Enter your message">
+<button onclick="sendMessage()">Send</button>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        let socket = new SockJS('/ws');   // WebSocket endpoint (Java tarafdagi registerStompEndpoints)
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/topic/notifications', function (message) {
+                showMessage(message.body);
+            });
+        });
+    }
+
+    function sendMessage() {
+        let message = document.getElementById("message").value;
+        stompClient.send("/app/notify", {}, message); // Controllerga yuboriladi
+    }
+
+    function showMessage(message) {
+        let li = document.createElement("li");
+        li.appendChild(document.createTextNode(message));
+        document.getElementById("notifications").appendChild(li);
+    }
+
+    connect(); // sahifa ochilganda WebSocketga ulanadi
+</script>
+</body>
+</html>
